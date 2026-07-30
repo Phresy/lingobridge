@@ -45,7 +45,7 @@ Map<String, String> twiTranslations = {
   "water": "nsu",
   "food": "aduane",
   "how much": "ɛyɛ ahe",
-  "house": "ofie",
+  "house": "ɛfie",
   "home": "fie",
   "school": "sukuu",
   "hospital": "ayaresabea",
@@ -246,6 +246,7 @@ Map<String, String> twiTranslations = {
   "going to": "rekɔ",
   "going": "rekɔ",
   "my": "me",
+  "have you eaten": "W'adidi",
 
   "His supporters were very rowdy during the campaign.":
       "N’akyigyinafo yɛɛ basabasa kɛse wɔ ɔsatu no mu.",

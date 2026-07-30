@@ -16,13 +16,9 @@ class SmartTtsService {
   // Cache to track which audio files exist
   final Map<String, bool> _audioCache = {};
 
-  // Current rate for TTS
-
   Future<void> _initialize() async {
-    // Pre-load list of available audio files
     try {
       await rootBundle.loadString('assets/audio/manifest.json');
-      // Parse manifest if you create one
     } catch (e) {
       // No manifest - we'll check files on-demand
     }
@@ -33,10 +29,10 @@ class SmartTtsService {
     required String text,
     required String languageCode,
     double rate = 0.5,
+    String? gender, // ← ADDED: 'male' or 'female'
   }) async {
     if (text.isEmpty) return;
 
-    // Clean the text for filename
     final fileName = _sanitizeFileName(text);
     final audioPath = 'assets/audio/$languageCode/$fileName.mp3';
 
@@ -51,12 +47,11 @@ class SmartTtsService {
 
     // Fallback to system TTS
     print('⚠️ No audio found, using system TTS');
-    await _speakTts(text, languageCode, rate);
+    await _speakTts(text, languageCode, rate, gender);
   }
 
   /// Check if audio file exists
   Future<bool> _hasAudio(String path) async {
-    // Check cache first
     if (_audioCache.containsKey(path)) {
       return _audioCache[path]!;
     }
@@ -83,13 +78,26 @@ class SmartTtsService {
     }
   }
 
-  /// System TTS fallback
-  Future<void> _speakTts(String text, String languageCode, double rate) async {
+  /// System TTS fallback with gender support
+  Future<void> _speakTts(
+    String text,
+    String languageCode,
+    double rate,
+    String? gender,
+  ) async {
     try {
-      // Set language for TTS
       final lang = _getTtsLanguage(languageCode);
       await _tts.setLanguage(lang);
       await _tts.setSpeechRate(rate);
+
+      // Set voice gender if specified
+      if (gender != null) {
+        await _tts.setVoice({
+          'name': gender == 'female' ? 'Female Voice' : 'Male Voice',
+          'locale': lang,
+        });
+      }
+
       await _tts.speak(text);
     } catch (e) {
       print('❌ TTS error: $e');
@@ -105,6 +113,8 @@ class SmartTtsService {
         return 'ee'; // Ewe
       case 'ha':
         return 'ha'; // Hausa
+      case 'gaa':
+        return 'gaa'; // Ga
       default:
         return 'en'; // English
     }

@@ -24,7 +24,7 @@ const _pages = [
   ),
   _OnboardPage(
     Icons.record_voice_over_rounded,
-    'Talk, don\u2019t just type',
+    'Talk, don\'t just type',
     'Speak naturally and hear translations read back to you.',
   ),
 ];
@@ -44,7 +44,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(StorageKeys.onboardingComplete, true);
     if (!mounted) return;
-    context.go('/login');
+    // FIXED: Go to HOME instead of LOGIN
+    context.go('/home');
   }
 
   @override

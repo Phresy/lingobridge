@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
-// ADD THIS IMPORT:
 import 'presentation/providers/theme_provider.dart';
+import 'presentation/providers/font_scale_provider.dart';
 
 class LingoBridgeApp extends ConsumerWidget {
   const LingoBridgeApp({super.key});
@@ -13,6 +13,7 @@ class LingoBridgeApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final fontScale = ref.watch(fontScaleProvider);
 
     return MaterialApp.router(
       title: 'LingoBridge',
@@ -21,6 +22,15 @@ class LingoBridgeApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
+      builder: (context, child) {
+        // Apply font scale globally
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(fontScale),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: use_build_context_synchronously, prefer_const_constructors, avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../providers/connectivity_provider.dart';
 import '../../providers/speech_provider.dart';
 import '../../providers/translate_controller.dart';
+import '../../providers/auto_detect_provider.dart';
 
 class TranslationScreen extends ConsumerWidget {
   const TranslationScreen({super.key});
@@ -18,6 +19,8 @@ class TranslationScreen extends ConsumerWidget {
     final connectivity = ref.watch(connectivityProvider);
     final translateState = ref.watch(translateControllerProvider);
     final controller = ref.read(translateControllerProvider.notifier);
+    final autoDetectState = ref.watch(autoDetectLanguageProvider);
+    final autoDetectNotifier = ref.read(autoDetectLanguageProvider.notifier);
 
     print(
         'UI BUILD - Result: ${translateState.result?.translatedText ?? "null"}');
@@ -38,8 +41,54 @@ class TranslationScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _OfflineModeBanner(),
-              const SizedBox(height: 8),
+              // Auto Detect Status Badge
+              if (autoDetectState.enabled)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.auto_awesome,
+                            size: 16, color: Colors.blue),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Auto-detect ON',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (autoDetectState.detectedLanguage != 'en')
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _getLanguageDisplayName(
+                                  autoDetectState.detectedLanguage),
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               _LanguageSelector(
                 source: translateState.sourceLanguage,
                 target: translateState.targetLanguage,
@@ -47,15 +96,29 @@ class TranslationScreen extends ConsumerWidget {
                 onSourceChanged: controller.setSourceLanguage,
                 onTargetChanged: controller.setTargetLanguage,
               ),
-              const SizedBox(height: 14),
-              _DomainSelector(
-                selected: translateState.domain,
-                onChanged: controller.setDomain,
-              ),
               const SizedBox(height: 16),
               _InputCard(
                 sourceLanguage: translateState.sourceLanguage,
-                onChanged: controller.setInputText,
+                onChanged: (text) {
+                  controller.setInputText(text);
+
+                  // Auto-detect if enabled
+                  if (autoDetectState.enabled && text.trim().length > 3) {
+                    autoDetectNotifier.detectLanguage(text).then((langCode) {
+                      final detected = _mapLanguageCode(langCode);
+                      if (detected != null &&
+                          detected != translateState.sourceLanguage) {
+                        controller.setSourceLanguage(detected);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Detected: ${detected.displayName}'),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    });
+                  }
+                },
                 isTranslating: translateState.isTranslating,
                 onTranslate: controller.translate,
                 onDictated: controller.setInputText,
@@ -75,8 +138,7 @@ class TranslationScreen extends ConsumerWidget {
                   text: translateState.result!.translatedText,
                   isFavorite: translateState.result!.isFavorite,
                   onFavoriteToggle: controller.toggleResultFavorite,
-                  targetLanguage:
-                      translateState.targetLanguage, // ← Pass language
+                  targetLanguage: translateState.targetLanguage,
                 ),
               ],
             ],
@@ -85,33 +147,39 @@ class TranslationScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _OfflineModeBanner extends StatelessWidget {
-  const _OfflineModeBanner();
+  String _getLanguageDisplayName(String code) {
+    switch (code) {
+      case 'en':
+        return 'English';
+      case 'tw':
+        return 'Twi';
+      case 'ee':
+        return 'Ewe';
+      case 'gaa':
+        return 'Ga';
+      case 'ha':
+        return 'Hausa';
+      default:
+        return code;
+    }
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.offline_bolt_rounded, size: 18, color: Colors.green),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Offline mode - Translations from GhanaNLP data',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ],
-      ),
-    );
+  SupportedLanguage? _mapLanguageCode(String code) {
+    switch (code) {
+      case 'en':
+        return SupportedLanguage.english;
+      case 'tw':
+        return SupportedLanguage.twi;
+      case 'ee':
+        return SupportedLanguage.ewe;
+      case 'gaa':
+        return SupportedLanguage.ga;
+      case 'ha':
+        return SupportedLanguage.hausa;
+      default:
+        return null;
+    }
   }
 }
 
@@ -210,9 +278,8 @@ class _InputCardState extends ConsumerState<_InputCard> {
               ),
               const Spacer(),
               IconButton(
-                tooltip: sttState.isListening
-                    ? 'Stop listening'
-                    : 'Voice input (works best in English on most devices)',
+                tooltip:
+                    sttState.isListening ? 'Stop listening' : 'Voice input',
                 onPressed: _toggleMic,
                 icon: Icon(
                   sttState.isListening
@@ -248,13 +315,13 @@ class _ResultCard extends ConsumerWidget {
     required this.text,
     required this.isFavorite,
     required this.onFavoriteToggle,
-    required this.targetLanguage, // ← NEW: Pass target language
+    required this.targetLanguage,
   });
 
   final String text;
   final bool isFavorite;
   final VoidCallback onFavoriteToggle;
-  final SupportedLanguage targetLanguage; // ← NEW
+  final SupportedLanguage targetLanguage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -283,17 +350,16 @@ class _ResultCard extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              // ===== PLAY BUTTON - Now passes language code =====
+              // ===== PLAY BUTTON =====
               IconButton(
                 tooltip: playback == PlaybackState.playing ? 'Pause' : 'Play',
                 onPressed: () {
                   if (playback == PlaybackState.playing) {
                     ttsController.pause();
                   } else {
-                    // Pass the language code to TTS
                     ttsController.play(
                       text,
-                      languageCode: targetLanguage.code, // ← 'tw', 'ee', 'ha'
+                      languageCode: targetLanguage.code,
                     );
                   }
                 },
@@ -311,7 +377,7 @@ class _ResultCard extends ConsumerWidget {
                   ttsController.stop();
                   ttsController.play(
                     text,
-                    languageCode: targetLanguage.code, // ← Pass language
+                    languageCode: targetLanguage.code,
                   );
                 },
                 icon: Icon(Icons.replay_rounded,
@@ -388,34 +454,6 @@ class _ResultCard extends ConsumerWidget {
                 ],
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _DomainSelector extends StatelessWidget {
-  const _DomainSelector({required this.selected, required this.onChanged});
-
-  final TranslationDomain selected;
-  final ValueChanged<TranslationDomain> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: TranslationDomain.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final domain = TranslationDomain.values[i];
-          final isSelected = domain == selected;
-          return ChoiceChip(
-            label: Text(domain.label),
-            selected: isSelected,
-            onSelected: (_) => onChanged(domain),
           );
         },
       ),

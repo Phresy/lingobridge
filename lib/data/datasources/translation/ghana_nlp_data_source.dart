@@ -4,6 +4,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/data/twi_data.dart';
 import '../../../core/data/ewe_data.dart';
 import '../../../core/data/hausa_data.dart';
+import '../../../core/data/ga_data.dart';
 import 'translation_data_source.dart';
 
 class GhanaNlpDataSource implements TranslationDataSource {
@@ -34,7 +35,14 @@ class GhanaNlpDataSource implements TranslationDataSource {
       _dictionaries[SupportedLanguage.hausa] = {};
     }
 
-    _dictionaries[SupportedLanguage.ga] = {};
+    try {
+      _dictionaries[SupportedLanguage.ga] = gaTranslations;
+      print('Ga loaded: ${gaTranslations.length}');
+    } catch (e) {
+      print('Ga ERROR: $e');
+      _dictionaries[SupportedLanguage.ga] = {};
+    }
+
     print('Total dictionaries: ${_dictionaries.length}');
   }
 
@@ -49,131 +57,109 @@ class GhanaNlpDataSource implements TranslationDataSource {
 
     if (text.trim().isEmpty) return '';
 
-    final cleanText = text.trim().toLowerCase();
+    final originalText = text.trim();
+    final lowerText = originalText.toLowerCase();
 
     // English -> Ghanaian Language
     if (from == SupportedLanguage.english) {
       final dict = _dictionaries[to] ?? {};
       print('Dictionary size: ${dict.length}');
 
-      // METHOD 1: EXACT MATCH
-      if (dict.containsKey(cleanText)) {
-        final result = dict[cleanText]!;
-        print('Exact match: "$text" -> "$result"');
+      // ===== METHOD 1: EXACT MATCH (CASE SENSITIVE) =====
+      if (dict.containsKey(originalText)) {
+        final result = dict[originalText]!;
+        print('✅ EXACT MATCH: "$originalText" -> "$result"');
         return result;
       }
 
-      // METHOD 2: REMOVE TRAILING PUNCTUATION
-      final noPunctuation = cleanText.replaceAll(RegExp(r'[.,!?;:"\"]$'), '');
-      if (noPunctuation != cleanText && dict.containsKey(noPunctuation)) {
-        final result = dict[noPunctuation]!;
-        print('No punctuation: "$text" -> "$result"');
-        return result;
-      }
-
-      // METHOD 3: SINGLE WORD - APPLY STEMMING (ONLY IF NOT FOUND ABOVE)
-      final stemmed = _stemWord(cleanText);
-      if (stemmed != cleanText && dict.containsKey(stemmed)) {
-        final result = dict[stemmed]!;
-        print('Stemming applied: "$text" -> "$result"');
-        return result;
-      }
-
-      // METHOD 4: WORD-BY-WORD TRANSLATION
-      final words = cleanText.split(' ');
-      if (words.length > 1) {
-        final translatedWords = <String>[];
-        final notFoundWords = <String>[];
-
-        for (final word in words) {
-          // First try exact match
-          if (dict.containsKey(word)) {
-            translatedWords.add(dict[word]!);
-          } else {
-            // Only apply stemming if exact match fails
-            final stemmedWord = _stemWord(word);
-            if (stemmedWord != word && dict.containsKey(stemmedWord)) {
-              translatedWords.add(dict[stemmedWord]!);
-              print('Stemming applied to "$word" -> "$stemmedWord"');
-            } else {
-              notFoundWords.add(word);
-              translatedWords.add(word); // Keep original if not found
-            }
-          }
-        }
-
-        final result = translatedWords.join(' ');
-        if (notFoundWords.isEmpty) {
-          print('Word-by-word complete: "$text" -> "$result"');
-        } else {
-          print(
-              'Word-by-word (${notFoundWords.length} words not found): "$text" -> "$result"');
-        }
-        return result;
-      }
-
-      // METHOD 5: PARTIAL MATCH (last resort - ONLY for single words not found above)
+      // ===== METHOD 2: EXACT MATCH (CASE INSENSITIVE) =====
       for (final entry in dict.entries) {
-        final key = entry.key.toLowerCase();
-        if (key.contains(cleanText) || cleanText.contains(key)) {
+        if (entry.key.toLowerCase() == lowerText) {
           final result = entry.value;
-          print(
-              'Partial match: "$text" -> "$result" (matched: "${entry.key}")');
+          print('✅ CASE-INSENSITIVE MATCH: "$originalText" -> "$result"');
           return result;
         }
       }
 
-      // NOT FOUND
-      print('Not found: "$text"');
-      return '[${to.displayName}] Not found: "$text"';
+      // ===== METHOD 3: EXACT MATCH WITH PUNCTUATION FIXES =====
+      // Try removing trailing punctuation
+      final noTrailingPunct =
+          originalText.replaceAll(RegExp(r'[.,!?;:"\"]$'), '');
+      if (noTrailingPunct != originalText) {
+        if (dict.containsKey(noTrailingPunct)) {
+          final result = dict[noTrailingPunct]!;
+          print(
+              '✅ MATCH (no trailing punctuation): "$originalText" -> "$result"');
+          return result;
+        }
+        // Try case insensitive
+        for (final entry in dict.entries) {
+          if (entry.key.toLowerCase() == noTrailingPunct.toLowerCase()) {
+            final result = entry.value;
+            print(
+                '✅ MATCH (no trailing punct + case-insensitive): "$originalText" -> "$result"');
+            return result;
+          }
+        }
+      }
+
+      // ===== METHOD 4: WORD-BY-WORD (ONLY FOR SHORT PHRASES < 5 WORDS) =====
+      final words = originalText.split(' ');
+      if (words.length <= 5 && words.length > 1) {
+        final translatedWords = <String>[];
+        final notFoundWords = <String>[];
+
+        for (final word in words) {
+          final lowerWord = word.toLowerCase();
+          String? found;
+
+          // Try exact match
+          if (dict.containsKey(word)) {
+            found = dict[word]!;
+          } else {
+            // Try case insensitive
+            for (final entry in dict.entries) {
+              if (entry.key.toLowerCase() == lowerWord) {
+                found = entry.value;
+                break;
+              }
+            }
+          }
+
+          if (found != null) {
+            translatedWords.add(found);
+          } else {
+            notFoundWords.add(word);
+            translatedWords.add(word);
+          }
+        }
+
+        final result = translatedWords.join(' ');
+        print('Word-by-word translation: "$originalText" -> "$result"');
+        return result;
+      }
+
+      // ===== NOT FOUND =====
+      print('❌ NO MATCH FOUND: "$originalText"');
+      return '[${to.displayName}] Not found: "$originalText"';
     }
 
     // Ghanaian Language -> English
     if (to == SupportedLanguage.english) {
-      final cleanLower = cleanText.toLowerCase();
+      final cleanLower = lowerText;
       for (final entry in _dictionaries.entries) {
         final dict = entry.value;
         for (final pair in dict.entries) {
           if (pair.value.toLowerCase().trim() == cleanLower) {
-            print('Reverse found: "$text" -> "${pair.key}"');
+            print('Reverse found: "$originalText" -> "${pair.key}"');
             return pair.key;
           }
         }
       }
-      return '[English] Not found: "$text"';
+      return '[English] Not found: "$originalText"';
     }
 
     return 'Direct ${from.displayName} -> ${to.displayName} not supported';
-  }
-
-  // ===== STEM FUNCTION (only applied when word is NOT found in dictionary) =====
-  String _stemWord(String word) {
-    // Remove common suffixes
-    if (word.endsWith('ing') && word.length > 4) {
-      return word.substring(0, word.length - 3);
-    }
-    if (word.endsWith('ed') && word.length > 3) {
-      return word.substring(0, word.length - 2);
-    }
-    if (word.endsWith('s') && word.length > 2 && !word.endsWith('ss')) {
-      return word.substring(0, word.length - 1);
-    }
-    if (word.endsWith('es') && word.length > 3) {
-      return word.substring(0, word.length - 2);
-    }
-    if (word.endsWith('ly') && word.length > 3) {
-      return word.substring(0, word.length - 2);
-    }
-    if (word.endsWith('ment') && word.length > 5) {
-      return word.substring(0, word.length - 4);
-    }
-    if (word.endsWith('tion') && word.length > 5) {
-      return word.substring(0, word.length - 3);
-    }
-    if (word.endsWith('ness') && word.length > 5) {
-      return word.substring(0, word.length - 4);
-    }
-    return word; // No change if no suffix matches
   }
 
   void addDictionary(

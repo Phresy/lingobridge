@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// FIXED: Add all required imports
 import '../../screens/translation/translation_screen.dart';
 import '../../screens/history/history_screen.dart';
 import '../../screens/downloads/downloads_screen.dart';
@@ -20,7 +19,6 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  // FIXED: Remove 'const' keyword - these are not constant constructors
   final _screens = [
     const TranslationScreen(),
     const HistoryScreen(),

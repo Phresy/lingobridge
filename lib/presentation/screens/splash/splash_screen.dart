@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,7 +32,8 @@ class _SplashScreenState extends State<SplashScreen>
     final onboarded = prefs.getBool(StorageKeys.onboardingComplete) ?? false;
     await Future.delayed(const Duration(milliseconds: 1400));
     if (!mounted) return;
-    context.go(onboarded ? '/login' : '/onboarding');
+    // FIXED: Go to onboarding or home
+    context.go(onboarded ? '/home' : '/onboarding');
   }
 
   @override
