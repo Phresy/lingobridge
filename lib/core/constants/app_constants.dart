@@ -2,7 +2,14 @@ library;
 
 import 'package:flutter/material.dart';
 
-enum SupportedLanguage { english, twi, ewe, ga, hausa }
+enum SupportedLanguage {
+  english,
+  twi,
+  ewe,
+  ga,
+  hausa,
+  dagbani // ← ADDED
+}
 
 extension SupportedLanguageX on SupportedLanguage {
   /// ISO-ish code used as the key for API calls and local DB rows.
@@ -18,6 +25,8 @@ extension SupportedLanguageX on SupportedLanguage {
         return 'gaa';
       case SupportedLanguage.hausa:
         return 'ha';
+      case SupportedLanguage.dagbani: // ← ADDED
+        return 'dag';
     }
   }
 
@@ -33,6 +42,8 @@ extension SupportedLanguageX on SupportedLanguage {
         return 'Ga';
       case SupportedLanguage.hausa:
         return 'Hausa';
+      case SupportedLanguage.dagbani: // ← ADDED
+        return 'Dagbani';
     }
   }
 
@@ -49,6 +60,8 @@ extension SupportedLanguageX on SupportedLanguage {
         return '~170 MB';
       case SupportedLanguage.hausa:
         return '~190 MB';
+      case SupportedLanguage.dagbani: // ← ADDED
+        return '~160 MB';
     }
   }
 }
@@ -122,5 +135,5 @@ class StorageKeys {
   static const String speechGender = 'lb_speech_gender';
   static const String autoDetectLanguage = 'lb_auto_detect_language';
   static const String themeColorSeed = 'lb_theme_color_seed';
-  static const String khayaApiKey = 'lb_khaya_api_key'; // ← ADD THIS
+  static const String khayaApiKey = 'lb_khaya_api_key';
 }

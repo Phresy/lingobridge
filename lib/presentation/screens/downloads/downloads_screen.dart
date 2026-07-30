@@ -8,6 +8,7 @@ import '../../../core/data/twi_data.dart';
 import '../../../core/data/ewe_data.dart';
 import '../../../core/data/ga_data.dart';
 import '../../../core/data/hausa_data.dart';
+import '../../../core/data/dagbani_data.dart'; // ← ADD THIS
 
 class DownloadsScreen extends ConsumerWidget {
   const DownloadsScreen({super.key});
@@ -31,6 +32,10 @@ class DownloadsScreen extends ConsumerWidget {
       _LanguageInfo(
         language: SupportedLanguage.hausa,
         translations: hausaTranslations,
+      ),
+      _LanguageInfo(
+        language: SupportedLanguage.dagbani, // ← ADD THIS
+        translations: dagbaniTranslations, // ← ADD THIS
       ),
     ];
 
@@ -57,8 +62,7 @@ class DownloadsScreen extends ConsumerWidget {
         itemBuilder: (context, i) {
           final info = languages[i];
           final lang = info.language;
-          final translationCount =
-              info.translations.length; // ← REAL-TIME COUNT
+          final translationCount = info.translations.length;
 
           return Card(
             elevation: 2,

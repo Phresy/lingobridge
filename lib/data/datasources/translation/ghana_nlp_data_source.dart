@@ -5,6 +5,7 @@ import '../../../core/data/twi_data.dart';
 import '../../../core/data/ewe_data.dart';
 import '../../../core/data/hausa_data.dart';
 import '../../../core/data/ga_data.dart';
+import '../../../core/data/dagbani_data.dart'; // ← ADD THIS
 import 'translation_data_source.dart';
 
 class GhanaNlpDataSource implements TranslationDataSource {
@@ -41,6 +42,15 @@ class GhanaNlpDataSource implements TranslationDataSource {
     } catch (e) {
       print('Ga ERROR: $e');
       _dictionaries[SupportedLanguage.ga] = {};
+    }
+
+    // ===== ADD DAGBANI =====
+    try {
+      _dictionaries[SupportedLanguage.dagbani] = dagbaniTranslations;
+      print('Dagbani loaded: ${dagbaniTranslations.length}');
+    } catch (e) {
+      print('Dagbani ERROR: $e');
+      _dictionaries[SupportedLanguage.dagbani] = {};
     }
 
     print('Total dictionaries: ${_dictionaries.length}');
