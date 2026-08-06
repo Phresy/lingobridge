@@ -5,7 +5,7 @@ import '../../../core/data/twi_data.dart';
 import '../../../core/data/ewe_data.dart';
 import '../../../core/data/hausa_data.dart';
 import '../../../core/data/ga_data.dart';
-import '../../../core/data/dagbani_data.dart'; // ← ADD THIS
+import '../../../core/data/dagbani_data.dart';
 import 'translation_data_source.dart';
 
 class GhanaNlpDataSource implements TranslationDataSource {
@@ -44,7 +44,6 @@ class GhanaNlpDataSource implements TranslationDataSource {
       _dictionaries[SupportedLanguage.ga] = {};
     }
 
-    // ===== ADD DAGBANI =====
     try {
       _dictionaries[SupportedLanguage.dagbani] = dagbaniTranslations;
       print('Dagbani loaded: ${dagbaniTranslations.length}');
@@ -68,100 +67,121 @@ class GhanaNlpDataSource implements TranslationDataSource {
     if (text.trim().isEmpty) return '';
 
     final originalText = text.trim();
-    final lowerText = originalText.toLowerCase();
+    final cleanedInput = _removePunctuation(originalText);
+    final lowerCleanedInput = cleanedInput.toLowerCase();
 
     // English -> Ghanaian Language
     if (from == SupportedLanguage.english) {
       final dict = _dictionaries[to] ?? {};
       print('Dictionary size: ${dict.length}');
 
-      // ===== METHOD 1: EXACT MATCH (CASE SENSITIVE) =====
+      // ===== METHOD 1: EXACT MATCH (PRESERVES PUNCTUATION) =====
       if (dict.containsKey(originalText)) {
         final result = dict[originalText]!;
         print('✅ EXACT MATCH: "$originalText" -> "$result"');
         return result;
       }
 
-      // ===== METHOD 2: EXACT MATCH (CASE INSENSITIVE) =====
+      // ===== METHOD 2: CLEANED TEXT MATCH (Compare cleaned versions) =====
+      // Loop through dictionary and compare cleaned keys
+      String? bestMatch;
+      String? bestTranslation;
+
       for (final entry in dict.entries) {
-        if (entry.key.toLowerCase() == lowerText) {
-          final result = entry.value;
-          print('✅ CASE-INSENSITIVE MATCH: "$originalText" -> "$result"');
-          return result;
+        final cleanedKey = _removePunctuation(entry.key).toLowerCase();
+        if (cleanedKey == lowerCleanedInput) {
+          bestMatch = entry.key;
+          bestTranslation = entry.value;
+          break;
         }
       }
 
-      // ===== METHOD 3: EXACT MATCH WITH PUNCTUATION FIXES =====
-      // Try removing trailing punctuation
-      final noTrailingPunct =
-          originalText.replaceAll(RegExp(r'[.,!?;:"\"]$'), '');
-      if (noTrailingPunct != originalText) {
-        if (dict.containsKey(noTrailingPunct)) {
-          final result = dict[noTrailingPunct]!;
-          print(
-              '✅ MATCH (no trailing punctuation): "$originalText" -> "$result"');
-          return result;
-        }
-        // Try case insensitive
-        for (final entry in dict.entries) {
-          if (entry.key.toLowerCase() == noTrailingPunct.toLowerCase()) {
-            final result = entry.value;
-            print(
-                '✅ MATCH (no trailing punct + case-insensitive): "$originalText" -> "$result"');
-            return result;
-          }
-        }
+      if (bestMatch != null && bestTranslation != null) {
+        print('✅ CLEANED MATCH: "$bestMatch" -> "$bestTranslation"');
+        return bestTranslation;
       }
 
-      // ===== METHOD 4: WORD-BY-WORD (ONLY FOR SHORT PHRASES < 5 WORDS) =====
-      final words = originalText.split(' ');
-      if (words.length <= 5 && words.length > 1) {
+      // ===== METHOD 3: PHRASE MATCHING (LONGEST PHRASES FIRST) =====
+      final words = cleanedInput.split(' ');
+      if (words.length > 1) {
         final translatedWords = <String>[];
-        final notFoundWords = <String>[];
+        int i = 0;
 
-        for (final word in words) {
-          final lowerWord = word.toLowerCase();
-          String? found;
+        while (i < words.length) {
+          String? foundTranslation;
+          int foundLength = 0;
 
-          // Try exact match
-          if (dict.containsKey(word)) {
-            found = dict[word]!;
-          } else {
-            // Try case insensitive
-            for (final entry in dict.entries) {
-              if (entry.key.toLowerCase() == lowerWord) {
-                found = entry.value;
-                break;
+          // Start from longest possible phrase (5 words max, or remaining words)
+          final maxPhraseLength = (words.length - i).clamp(1, 5);
+
+          for (int length = maxPhraseLength; length >= 1; length--) {
+            final phrase = words.sublist(i, i + length).join(' ');
+
+            // Check if this phrase exists in the dictionary
+            String? match;
+            if (dict.containsKey(phrase)) {
+              match = dict[phrase];
+            } else {
+              // Try case insensitive
+              for (final entry in dict.entries) {
+                if (entry.key.toLowerCase() == phrase.toLowerCase()) {
+                  match = entry.value;
+                  break;
+                }
               }
+            }
+
+            if (match != null) {
+              foundTranslation = match;
+              foundLength = length;
+              break;
             }
           }
 
-          if (found != null) {
-            translatedWords.add(found);
+          if (foundTranslation != null && foundLength > 0) {
+            translatedWords.add(foundTranslation);
+            i += foundLength;
           } else {
-            notFoundWords.add(word);
-            translatedWords.add(word);
+            // Word not found - keep original
+            translatedWords.add(words[i]);
+            i++;
           }
         }
 
         final result = translatedWords.join(' ');
-        print('Word-by-word translation: "$originalText" -> "$result"');
+        print('✅ PHRASE TRANSLATION: "$cleanedInput" -> "$result"');
         return result;
       }
 
+      // ===== METHOD 4: SINGLE WORD =====
+      // Try exact match for single word
+      if (dict.containsKey(cleanedInput)) {
+        return dict[cleanedInput]!;
+      }
+
+      // Try case insensitive for single word
+      for (final entry in dict.entries) {
+        if (entry.key.toLowerCase() == lowerCleanedInput) {
+          return entry.value;
+        }
+      }
+
       // ===== NOT FOUND =====
-      print('❌ NO MATCH FOUND: "$originalText"');
+      print('❌ NO MATCH FOUND: "$cleanedInput"');
       return '[${to.displayName}] Not found: "$originalText"';
     }
 
     // Ghanaian Language -> English
     if (to == SupportedLanguage.english) {
-      final cleanLower = lowerText;
+      final cleanLower = cleanedInput.toLowerCase();
+
       for (final entry in _dictionaries.entries) {
         final dict = entry.value;
         for (final pair in dict.entries) {
-          if (pair.value.toLowerCase().trim() == cleanLower) {
-            print('Reverse found: "$originalText" -> "${pair.key}"');
+          final cleanedValue =
+              _removePunctuation(pair.value).toLowerCase().trim();
+          if (cleanedValue == cleanLower) {
+            print('Reverse found: "$cleanedInput" -> "${pair.key}"');
             return pair.key;
           }
         }
@@ -170,6 +190,20 @@ class GhanaNlpDataSource implements TranslationDataSource {
     }
 
     return 'Direct ${from.displayName} -> ${to.displayName} not supported';
+  }
+
+  // ===== PUNCTUATION REMOVAL FUNCTION =====
+  String _removePunctuation(String text) {
+    // Remove punctuation: .,!?;:()[]{}"'@#$%^&*+=/|~` etc.
+    String cleaned = text.replaceAll(
+      RegExp(r'''[.,!?;:()\[\]{}"'@#\$%^&*+=/|~`]'''),
+      ' ',
+    );
+
+    // Remove extra spaces
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ');
+
+    return cleaned.trim();
   }
 
   void addDictionary(
