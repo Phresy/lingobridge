@@ -3,14 +3,16 @@
 
 Map<String, String> twiTranslations = {
 // Add these to your twi_data.dart
-  "hello": "agoo",
-  "hi": "agoo",
+  "hello": "hɛllo",
+  "hi": "hi",
   "good morning": "maakye",
   "good afternoon": "maaha",
   "good evening": "maadwo",
   "good night": "da yie",
   "how are you": "wo ho te sɛn?",
   "i am fine": "me ho ye",
+  "i am a student": "me ye sukuuni",
+  "i'm a student": "me ye sukuuni",
   "thank you": "medaase",
   "you are welcome": "akwaaba",
   "welcome": "akwaaba",
@@ -50,6 +52,7 @@ Map<String, String> twiTranslations = {
   "school": "sukuu",
   "hospital": "ayaresabea",
   "church": "asɔre",
+  "where are you going": "Wo rekɔ hefa",
   "market": "dwabɔ",
   "shop": "dwa",
   "bank": "sikakorabea",

@@ -29,6 +29,12 @@ Map<String, String> eweTranslations = {
   "Not a problem": "Mènye kuxi o",
   "That's absolutely fine": "Enyo nyuie",
   "Certainly": "Nyateƒe",
+  "my name is": "Nye ŋkɔme le",
+  "I am": "Nye",
+  "I'm": "Nye",
+  "me": "Nye",
+  "I am called": "Nye ŋkɔme le",
+  "I'm called": "Nye ŋkɔme le",
 
   // Other Ways to Say NO
   "I'm sorry I'm busy": "Babia, dɔ le asinye",
