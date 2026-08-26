@@ -619,11 +619,12 @@ Map<String, String> twiTranslations = {
   "i will come back later": "mɛsan aba akyiri",
 
 // ==================== OUTDOORING / NAMING CEREMONY ====================
-  "congratulations on your new baby": "ɛtire nkwa wɔ abofra foforo no so",
-  "what is the baby's name": "abofra no din de sɛn",
-  "the baby is beautiful": "abofra no ho yɛ fɛ",
+ 
+  "congratulations on your new baby": "akwaaba me ma wo nkwa",
+  "what is the baby's name": "abofra no din de dɛn",
+  "the baby is beautiful": "abofra no yɛ fɛ",
   "who is the father": "agya no ne hwan",
-  "who is the mother": "maame no ne hwan",
+  "who is the mother": "ɛna no ne hwan",
   "today is the outdooring": "nnɛ ne abadinto da",
   "let's pour libation": "yɛnhwie nsa",
   "god bless this child": "nyame nhyira abofra yi",
@@ -634,33 +635,32 @@ Map<String, String> twiTranslations = {
 
 // ==================== CHURCH ====================
   "the pastor is preaching": "ɔsɔfo no reka asɛm",
-  "let us pray": "momma yɛmmɔ mpaebo",
-  "sing with me": "mo ne me nto dwom",
+  "let us pray": "momma yɛmpa mpaebo",
+  "sing with me": "ne me nto dwom",
   "hallelujah": "haleluya",
-  "the offering is being collected": "wɔregye aforebɔ sika no",
+  "the offering is being collected": "wɔreboaboa sika no",
   "god bless you": "nyame nhyira wo",
   "i love this church": "medɔ asɔre yi",
   "the choir is singing": "nnwontofo no reto dwom",
-  "let us stand and pray": "yɛnsɔre yɛmmɔ mpaebo",
+  "let us stand and pray": "yɛnsɔre yɛmpa mpaebo",
   "the sermon is powerful": "asɛm no yɛ den",
   "i have received the blessing": "manyaa nhyira no",
   "god is great": "nyame yɛ kɛse",
 
 // ==================== FUNERAL ====================
   "my condolences": "mewɔ awerɛho",
-  "sorry for your loss": "kosɛ wo de wahwere",
+  "sorry for your loss": "kosɛ wo wereho",
   "the deceased has gone to rest": "owufo no akɔ ahome",
   "he was a good man": "na ɔyɛ onipa pa",
-  "she was a good woman": "na ɔyɛ onipa pa",
-  "god will comfort you": "nyame bekyekye wo werɛ",
-  "when is the burial": "ayie da no yɛ dabɛn",
+  "god will comfort you": "nyame bekosɛ wo werɛ",
+  "when is the burial": "awie da no yɛ dɛn",
   "the family is mourning": "abusua no retwa adwo",
   "we are wearing black": "yɛhye tuntum",
   "let us go to the funeral": "yɛnkɔ ayie",
-  "i have come to mourn": "maba resu awerɛho",
+  "i have come to mourn": "meba resu awerɛho",
   "may their soul rest in peace": "wɔn kra nkɔ ahome",
   "the funeral is tomorrow": "ayie no yɛ ɔkyena",
-  "bring the coffin": "fa adaka no bra ha",
+  "bring the coffin": "fa adaka no brɛ ha",
   "we will bury him today": "yɛbɛsie no nnɛ",
 
 // ==================== FESTIVALS ====================
@@ -674,7 +674,7 @@ Map<String, String> twiTranslations = {
   "we are going to the palace": "yɛrekɔ ahenfie",
 
 // ==================== GENERAL EVERYDAY ====================
-  "are you mad": "woabɔdam",
+  "are you mad": "wo dam",
   "please i beg you": "mesrɛ wo mepa wo kyɛw",
   "is it so": "ɛyɛ saa",
   "let's go and come": "yɛnkɔ na yɛmbra",
@@ -685,10 +685,10 @@ Map<String, String> twiTranslations = {
 
 // ==================== SOCIAL COMMANDS ====================
   "say that again": "san ka no bio",
-  "don't take it seriously": "mfa no aniberɛ",
+  "don't take it seriously": "mfa no nnyɛ nokware",
   "tell me the truth": "ka nokware no kyerɛ me",
   "don't lie to me": "mɛdi atoro nkyerɛ me",
-  "don't forget to call me": "mmaworɛ nfi sɛ wobɛfrɛ me",
+  "don't forget to call me": "mmerɛ wo ho mma nnfrɛ me",
 
   // Other Ways to Say NO
   "I'm sorry I'm busy": "Mepa wo kyɛw, mewɔ adwuma",
